@@ -61,6 +61,61 @@ class BookingUpdate(BaseModel):
     status: Optional[str] = None
     driver_name: Optional[str] = None
     driver_phone: Optional[str] = None
+    assigned_driver_id: Optional[str] = None
+
+
+# Driver Models
+class VehicleDetails(BaseModel):
+    vehicle_type: str  # e-rickshaw or pickup
+    vehicle_number: str
+    vehicle_color: Optional[str] = None
+
+class DriverCreate(BaseModel):
+    name: str
+    phone: str
+    address: Optional[str] = None
+    vehicle: VehicleDetails
+    is_available: bool = True
+
+class Driver(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    phone: str
+    address: Optional[str] = None
+    vehicle: VehicleDetails
+    is_available: bool = True
+    total_trips: int = 0
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class DriverUpdate(BaseModel):
+    name: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    vehicle: Optional[VehicleDetails] = None
+    is_available: Optional[bool] = None
+
+
+# Help/Contact Models
+class HelpRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    phone: str
+    email: Optional[str] = None
+    subject: str
+    message: str
+    status: str = "new"  # new, in_progress, resolved
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class HelpRequestCreate(BaseModel):
+    name: str
+    phone: str
+    email: Optional[str] = None
+    subject: str
+    message: str
 
 
 # Routes
