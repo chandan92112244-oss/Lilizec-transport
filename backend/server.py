@@ -208,6 +208,166 @@ async def get_bookings_by_status(status: str):
     return bookings
 
 
+# ============ DRIVER ROUTES ============
+
+# Create new driver
+@api_router.post("/drivers", response_model=Driver)
+async def create_driver(driver_data: DriverCreate):
+    driver = Driver(**driver_data.model_dump())
+    
+    doc = driver.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    
+    await db.drivers.insert_one(doc)
+    return driver
+
+
+# Get all drivers
+@api_router.get("/drivers", response_model=List[Driver])
+async def get_all_drivers():
+    drivers = await db.drivers.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    
+    for driver in drivers:
+        if isinstance(driver.get('created_at'), str):
+            driver['created_at'] = datetime.fromisoformat(driver['created_at'])
+    
+    return drivers
+
+
+# Get available drivers by vehicle type
+@api_router.get("/drivers/available/{vehicle_type}", response_model=List[Driver])
+async def get_available_drivers(vehicle_type: str):
+    drivers = await db.drivers.find({
+        "is_available": True,
+        "vehicle.vehicle_type": vehicle_type
+    }, {"_id": 0}).to_list(100)
+    
+    for driver in drivers:
+        if isinstance(driver.get('created_at'), str):
+            driver['created_at'] = datetime.fromisoformat(driver['created_at'])
+    
+    return drivers
+
+
+# Get single driver
+@api_router.get("/drivers/{driver_id}", response_model=Driver)
+async def get_driver(driver_id: str):
+    driver = await db.drivers.find_one({"id": driver_id}, {"_id": 0})
+    
+    if not driver:
+        raise HTTPException(status_code=404, detail="Driver not found")
+    
+    if isinstance(driver.get('created_at'), str):
+        driver['created_at'] = datetime.fromisoformat(driver['created_at'])
+    
+    return driver
+
+
+# Update driver
+@api_router.patch("/drivers/{driver_id}", response_model=Driver)
+async def update_driver(driver_id: str, update_data: DriverUpdate):
+    update_dict = {}
+    for k, v in update_data.model_dump().items():
+        if v is not None:
+            if k == "vehicle":
+                update_dict["vehicle"] = v
+            else:
+                update_dict[k] = v
+    
+    if not update_dict:
+        raise HTTPException(status_code=400, detail="No update data provided")
+    
+    result = await db.drivers.update_one(
+        {"id": driver_id},
+        {"$set": update_dict}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Driver not found")
+    
+    driver = await db.drivers.find_one({"id": driver_id}, {"_id": 0})
+    if isinstance(driver.get('created_at'), str):
+        driver['created_at'] = datetime.fromisoformat(driver['created_at'])
+    
+    return driver
+
+
+# Delete driver
+@api_router.delete("/drivers/{driver_id}")
+async def delete_driver(driver_id: str):
+    result = await db.drivers.delete_one({"id": driver_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Driver not found")
+    
+    return {"message": "Driver deleted successfully"}
+
+
+# Increment driver trip count
+@api_router.post("/drivers/{driver_id}/trip")
+async def increment_driver_trip(driver_id: str):
+    result = await db.drivers.update_one(
+        {"id": driver_id},
+        {"$inc": {"total_trips": 1}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Driver not found")
+    
+    return {"message": "Trip count updated"}
+
+
+# ============ HELP/CONTACT ROUTES ============
+
+# Create help request
+@api_router.post("/help", response_model=HelpRequest)
+async def create_help_request(help_data: HelpRequestCreate):
+    help_request = HelpRequest(**help_data.model_dump())
+    
+    doc = help_request.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    
+    await db.help_requests.insert_one(doc)
+    return help_request
+
+
+# Get all help requests (admin)
+@api_router.get("/help", response_model=List[HelpRequest])
+async def get_all_help_requests():
+    requests = await db.help_requests.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    
+    for req in requests:
+        if isinstance(req.get('created_at'), str):
+            req['created_at'] = datetime.fromisoformat(req['created_at'])
+    
+    return requests
+
+
+# Update help request status
+@api_router.patch("/help/{request_id}")
+async def update_help_request(request_id: str, status: str):
+    result = await db.help_requests.update_one(
+        {"id": request_id},
+        {"$set": {"status": status}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Help request not found")
+    
+    return {"message": "Status updated"}
+
+
+# Delete help request
+@api_router.delete("/help/{request_id}")
+async def delete_help_request(request_id: str):
+    result = await db.help_requests.delete_one({"id": request_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Help request not found")
+    
+    return {"message": "Help request deleted"}
+
+
 # Include the router in the main app
 app.include_router(api_router)
 
