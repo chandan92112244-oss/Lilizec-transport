@@ -1105,6 +1105,7 @@ const AdminPanel = ({ onBack, activeTab, setActiveTab }) => {
 
 // Main App Component
 function App() {
+  const ADMIN_PASSWORD = "Lilizec2025chandan";
   const [currentPage, setCurrentPage] = useState("home");
   const [adminTab, setAdminTab] = useState("bookings");
   const [savedData, setSavedData] = useState(() => {
