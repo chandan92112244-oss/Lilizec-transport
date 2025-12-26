@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import "@/App.css";
 import axios from "axios";
-
+const ADMIN_PASSWORD = "Lilizec2025chandan";//
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
@@ -1112,7 +1112,18 @@ function App() {
     return saved ? JSON.parse(saved) : null;
   });
   const [lastBooking, setLastBooking] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const handleAdminAccess = () => {
+    const password = prompt("Enter admin password");
 
+    if (password === ADMIN_PASSWORD) {
+      setIsAdmin(true);
+      setCurrentPage("admin");
+      setAdminTab("bookings");
+    } else {
+      alert("Wrong password");
+    }
+  };
   const handleBookingSuccess = (booking) => {
     setLastBooking(booking);
   };
@@ -1148,7 +1159,7 @@ function App() {
                 <span className="hidden sm:inline">Help</span>
               </button>
               <button
-                onClick={() => { setCurrentPage("admin"); setAdminTab("bookings"); }}
+                onClick={handleAdminAccess}
                 data-testid="admin-toggle"
                 className={`flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                   currentPage === "admin" ? "bg-orange-100 text-orange-600" : "text-gray-600 hover:bg-gray-100"
@@ -1163,7 +1174,7 @@ function App() {
       </header>
 
       {/* Admin Tabs */}
-      {currentPage === "admin" && (
+      {currentPage === "admin" && isAdmin && (
         <div className="bg-white border-b">
           <div className="max-w-6xl mx-auto px-4">
             <div className="flex gap-1 py-2">
@@ -1198,44 +1209,38 @@ function App() {
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-4 py-8">
-        {currentPage === "home" ? (
-          <>
-            {/* Hero Section */}
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-gray-800 mb-2">
-                🚚 सामान भेजना है?
-              </h2>
-              <p className="text-gray-600">
-                E-Rickshaw या Pickup से अपना सामान आसानी से भेजें
-              </p>
-            </div>
+  {currentPage === "home" ? (
+    <>
+      {/* Hero Section */}
+      <div className="text-center mb-8">
+        <h2 className="text-3xl font-bold text-gray-800 mb-2">
+          सामान पहुंचाना है?
+        </h2>
+        <p className="text-gray-600">
+          E-Rickshaw या Pickup से अपना सामान आसानी से भेजें
+        </p>
+      </div>
 
-            {/* Last Booking Info */}
-            {lastBooking && (
-              <div className="max-w-2xl mx-auto mb-6 bg-green-50 border border-green-200 rounded-xl p-4" data-testid="last-booking">
-                <p className="text-green-800 font-medium">✅ आपकी Last Booking</p>
-                <p className="text-sm text-green-600">Booking ID: {lastBooking.id}</p>
-                <p className="text-sm text-gray-600 mt-1">हम जल्दी ही WhatsApp पर contact करेंगे</p>
-              </div>
-            )}
+      {/* Last Booking Info */}
+      {lastBooking && (
+        <div className="max-w-2xl mx-auto mb-6 bg-green-50 border rounded-lg p-4">
+          <p className="text-green-800 font-medium">✅ आपकी Last Booking</p>
+          <p className="text-sm text-green-600">
+            Booking ID: {lastBooking.id}
+          </p>
+        </div>
+      )}
 
-            {/* Booking Form */}
-            <BookingForm 
-              onBookingSuccess={handleBookingSuccess}
-              savedData={savedData}
-              setSavedData={setSavedData}
-            />
-          </>
-        ) : currentPage === "help" ? (
-          <HelpSection />
-        ) : (
-          <AdminPanel 
-            onBack={() => setCurrentPage("home")}
-            activeTab={adminTab}
-            setActiveTab={setAdminTab}
-          />
-        )}
-      </main>
+      {/* Booking Form */}
+      <BookingForm
+        onBookingSuccess={handleBookingSuccess}
+        savedData={savedData}
+        setSavedData={setSavedData}
+      />
+    </>
+  ) : currentPage === "help" ? (
+    <HelpSection />
+</main>
 
       {/* Footer */}
       <footer className="bg-white border-t mt-12">
