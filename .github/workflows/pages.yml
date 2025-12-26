@@ -10,9 +10,14 @@ permissions:
   pages: write
   id-token: write
 
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,11 +27,13 @@ jobs:
         with:
           node-version: 18
 
-      - name: Install and Build
-        run: |
-          cd frontend
-          npm install --legacy-peer-deps
-          npm run build
+      - name: Install dependencies
+        run: npm install
+        working-directory: frontend
+
+      - name: Build
+        run: npm run build
+        working-directory: frontend
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
@@ -38,6 +45,7 @@ jobs:
     needs: build
     environment:
       name: github-pages
+
     steps:
-      - name: Deploy
+      - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4
