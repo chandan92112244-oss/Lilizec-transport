@@ -1114,21 +1114,24 @@ function App() {
   });
   const [lastBooking, setLastBooking] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const handleAdminAccess = () => {
-    const password = prompt("Enter admin password");
+  // 🔒 HARD ADMIN GUARD
+useEffect(() => {
+  if (currentPage === "admin" && !isAdmin) {
+    setCurrentPage("home");
+  }
+}, [currentPage, isAdmin]);
 
-    if (password === ADMIN_PASSWORD) {
-      setIsAdmin(true);
-      setCurrentPage("admin");
-      setAdminTab("bookings");
-    } else {
-      alert("Wrong password");
-    }
-  };
-  const handleBookingSuccess = (booking) => {
-    setLastBooking(booking);
-  };
+const handleAdminAccess = () => {
+  const password = prompt("Enter admin password");
 
+  if (password === ADMIN_PASSWORD) {
+    setIsAdmin(true);
+    setCurrentPage("admin");
+    setAdminTab("bookings");
+  } else {
+    alert("Wrong password");
+  }
+};
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-yellow-50">
       {/* Header */}
